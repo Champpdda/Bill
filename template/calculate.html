@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculation Result</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center text-primary">Calculation Result</h1>
+        <div class="result-box bg-light p-4 rounded shadow-sm mb-4">
+            <p><strong>Tax:</strong> {{ tax | round(2) }} EUR</p>
+            <p><strong>Tip:</strong> {{ tip | round(2) }} EUR</p>
+            <p><strong>Total Bill:</strong> {{ total_bill | round(2) }} EUR</p>
+            <p><strong>Price per Person:</strong> {{ price_per_person | round(2) }} EUR</p>
+        </div>
+
+        <h2 class="text-center text-secondary">Payment</h2>
+        <form action="/payment" method="POST" class="payment-form">
+            <input type="hidden" name="totalBill" value="{{ total_bill }}">
+            <div class="form-group row g-3 mb-3">
+                <!-- Loop for Denominations -->
+                {% for denomination, value in {
+                    '500 euro': 500,
+                    '200 euro': 200,
+                    '100 euro': 100,
+                    '50 euro': 50,
+                    '20 euro': 20,
+                    '10 euro': 10,
+                    '5 euro': 5,
+                    '2 euro': 2,
+                    '1 euro': 1,
+                    '50 cent': 0.50,
+                    '20 cent': 0.20,
+                    '10 cent': 0.10,
+                    '5 cent': 0.05,
+                    '2 cent': 0.02,
+                    '1 cent': 0.01,
+                }.items() %}
+                <div class="col-md-6">
+                    <label for="{{ denomination.replace(' ', '_') }}" class="form-label">{{ denomination }}:</label>
+                    <input type="number" id="{{ denomination.replace(' ', '_') }}" name="{{ denomination.replace(' ', '_') }}" class="form-control" value="0" min="0">
+                </div>
+                {% endfor %}
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Submit Payment</button>
+        </form>
+    </div>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
