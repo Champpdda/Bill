@@ -127,54 +127,53 @@ num_people = st.sidebar.number_input("Number of People:", min_value=1)
 
 # ตัวเลือกสกุลเงินสำหรับการจ่าย
 to_currency = st.sidebar.selectbox("Select currency for payment:", ["USD", "THB", "JPY", "GBP", "CNY", "EUR"])
+tax, tip, total_bill, price_per_person = calculate_bill(bill_amount, tax_rate, tip_percentage, num_people)
 
-if st.sidebar.button("Calculate"):
-    tax, tip, total_bill, price_per_person = calculate_bill(bill_amount, tax_rate, tip_percentage, num_people)
+# แปลงผลลัพธ์ไปยังสกุลเงินที่เลือก
+total_bill_converted = convert_currency(api_key, "EUR", to_currency, total_bill)
+price_per_person_converted = convert_currency(api_key, "EUR", to_currency, price_per_person)
 
-    # แปลงผลลัพธ์ไปยังสกุลเงินที่เลือก
-    total_bill_converted = convert_currency(api_key, "EUR", to_currency, total_bill)
-    price_per_person_converted = convert_currency(api_key, "EUR", to_currency, price_per_person)
+# Always display the "Calculation Result"
+if total_bill_converted is not None and price_per_person_converted is not None:
+    st.subheader("Calculation Result")
+    st.write(f"Tax: {tax:.2f} EUR")
+    st.write(f"Tip: {tip:.2f} EUR")
+    st.write(f"Total Bill: {total_bill_converted:.2f} {to_currency}")
+    st.write(f"Price per Person: {price_per_person_converted:.2f} {to_currency}")
 
-    # ตรวจสอบว่าการแปลงสกุลเงินสำเร็จหรือไม่
-    if total_bill_converted is not None and price_per_person_converted is not None:
-        st.subheader("Calculation Result")
-        st.write(f"Tax: {tax:.2f} EUR")
-        st.write(f"Tip: {tip:.2f} EUR")
-        st.write(f"Total Bill: {total_bill_converted:.2f} {to_currency}")
-        st.write(f"Price per Person: {price_per_person_converted:.2f} {to_currency}")
+# ส่วนสำหรับการชำระเงิน
+st.subheader("Payment")
 
-        # ส่วนสำหรับการชำระเงิน
-        st.subheader("Payment")
+# ดึง denominations จากสกุลเงินที่เลือก
+selected_denominations = denominations[to_currency]
+
+paid_amount = 0
+payment_details = {}
+
+for denomination in selected_denominations:
+    count = st.number_input(f"{denomination}:", min_value=0, step=1, key=denomination)
+    payment_details[denomination] = count
+    paid_amount += count * selected_denominations[denomination]
+
+# Pay button logic
+if st.button("Pay"):
+    if paid_amount >= total_bill_converted:
+        change = paid_amount - total_bill_converted
         
-        # ดึง denominations จากสกุลเงินที่เลือก
-        selected_denominations = denominations[to_currency]
+        # แสดงใบเสร็จ
+        display_receipt(bill_amount, tax, tip, total_bill_converted, price_per_person_converted, paid_amount, change, to_currency)
 
-        paid_amount = 0
-        payment_details = {}
-
-        for denomination in selected_denominations:
-            count = st.number_input(f"{denomination}:", min_value=0, step=1, key=denomination)
-            payment_details[denomination] = count
-            paid_amount += count * selected_denominations[denomination]
-
-        if st.button("Pay"):
-            if paid_amount >= total_bill_converted:
-                change = paid_amount - total_bill_converted
-                
-                # แสดงใบเสร็จ
-                display_receipt(bill_amount, tax, tip, total_bill_converted, price_per_person_converted, paid_amount, change, to_currency)
-
-                # ปุ่มพิมพ์ใบเสร็จ
-                receipt = f"""
-                Bill Amount: €{bill_amount:.2f}
-                Tax: {tax:.2f} EUR
-                Tip: {tip:.2f} EUR
-                Total Bill: {total_bill_converted:.2f} {to_currency}
-                Price per Person: {price_per_person_converted:.2f} {to_currency}
-                Paid Amount: {paid_amount:.2f} {to_currency}
-                Change: {change:.2f} {to_currency}
-                """
-                st.download_button("Download Receipt", receipt, file_name="receipt.txt")
-            else:
-                shortfall = total_bill_converted - paid_amount
-                st.error(f"Not enough money provided. You need to add {shortfall:.2f} {to_currency}.")
+        # ปุ่มพิมพ์ใบเสร็จ
+        receipt = f"""
+        Bill Amount: €{bill_amount:.2f}
+        Tax: {tax:.2f} EUR
+        Tip: {tip:.2f} EUR
+        Total Bill: {total_bill_converted:.2f} {to_currency}
+        Price per Person: {price_per_person_converted:.2f} {to_currency}
+        Paid Amount: {paid_amount:.2f} {to_currency}
+        Change: {change:.2f} {to_currency}
+        """
+        st.download_button("Download Receipt", receipt, file_name="receipt.txt")
+    else:
+        shortfall = total_bill_converted - paid_amount
+        st.error(f"Not enough money provided. You need to add {shortfall:.2f} {to_currency}.")
