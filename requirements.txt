@@ -1,3 +1,8 @@
+<<<<<<< HEAD
 streamlit
 firebase-admin
+=======
+streamlit
+firebase-admin
+>>>>>>> d0d26c354aaa6c3545dee78344034eec227061ce
 requests
