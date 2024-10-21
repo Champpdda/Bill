@@ -1,5 +1,31 @@
 import streamlit as st
 import requests
+from firebase_config import initialize_firebase  # นำเข้าฟังก์ชันสำหรับการเชื่อมต่อ Firebase
+import firebase_admin
+from firebase_admin import credentials, firestore
+from datetime import datetime
+
+# เรียกใช้ฟังก์ชันเพื่อเชื่อมต่อกับ Firestore
+db = initialize_firebase()
+
+# ฟังก์ชันสำหรับบันทึกใบเสร็จลง Firebase
+def save_receipt_to_firestore(bill_amount, tax, tip, total_bill_converted, price_per_person_converted, paid_amount, change, currency):
+    try:
+        receipt_data = {
+            'bill_amount': bill_amount,
+            'tax': tax,
+            'tip': tip,
+            'total_bill': total_bill_converted,
+            'price_per_person': price_per_person_converted,
+            'paid_amount': paid_amount,
+            'change': change,
+            'currency': currency,
+            'timestamp': firestore.SERVER_TIMESTAMP  # บันทึกเวลาที่บันทึกข้อมูล
+        }
+        db.collection('receipts').add(receipt_data)
+        st.success("Receipt successfully saved to the cloud.")
+    except Exception as e:
+        st.error(f"Error saving receipt to cloud: {e}")
 
 # ใส่ API Key ที่ได้รับ
 api_key = '21766d7c69822a4e7d815c4f'  # ใช้วิธีที่ปลอดภัยกว่าในการจัดการ API Key 
@@ -163,6 +189,17 @@ if st.button("Pay"):
         # แสดงใบเสร็จ
         display_receipt(bill_amount, tax, tip, total_bill_converted, price_per_person_converted, paid_amount, change, to_currency)
 
+        bill_data = {
+            'bill_amount': bill_amount,
+            'change': change,
+            'currency': to_currency,
+            'paid_amount': paid_amount,
+            'price_per_person': price_per_person_converted,
+            'tax': tax,
+            'timestamp': datetime.now(),
+            'tip': tip,
+            'total_bill': bill_amount
+        }
         # ปุ่มพิมพ์ใบเสร็จ
         receipt = f"""
         Bill Amount: €{bill_amount:.2f}
@@ -174,6 +211,10 @@ if st.button("Pay"):
         Change: {change:.2f} {to_currency}
         """
         st.download_button("Download Receipt", receipt, file_name="receipt.txt")
+
+        db.collection('Bill').add(bill_data)
+
+        print("Document successfully written!")
     else:
         shortfall = total_bill_converted - paid_amount
         st.error(f"Not enough money provided. You need to add {shortfall:.2f} {to_currency}.")
