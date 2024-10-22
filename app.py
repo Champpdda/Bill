@@ -1,7 +1,8 @@
 import streamlit as st
 import requests
-from firebase_config import initialize_firebase
-from firebase_admin import firestore
+from firebase_config import initialize_firebase  # นำเข้าฟังก์ชันสำหรับการเชื่อมต่อ Firebase
+import firebase_admin
+from firebase_admin import credentials, firestore
 from datetime import datetime
 
 # ใส่ API Key ที่ได้รับ
@@ -33,7 +34,7 @@ def save_receipt_to_firestore(bill_amount, tax, tip, total_bill_converted, price
             'paid_amount': paid_amount,
             'change': change,
             'currency': currency,
-            'timestamp': firestore.SERVER_TIMESTAMP
+            'timestamp': firestore.SERVER_TIMESTAMP  # บันทึกเวลาที่บันทึกข้อมูล
         }
         db.collection('receipts').add(receipt_data)
         st.success("Receipt successfully saved to the cloud.")
@@ -308,21 +309,22 @@ if st.button("Pay"):
         Change: {change:.2f} {to_currency}
         Date: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
         """
-
+        
         # ปุ่มพิมพ์ใบเสร็จ
-        st.markdown(f"""
-        <button onclick="printReceipt()">Print Receipt</button>
-        <script>
-            function printReceipt() {{
-                var receipt = `{receipt_text}`;
-                var win = window.open('', '', 'width=600,height=400');
-                win.document.write('<pre>' + receipt + '</pre>');
-                win.document.close();
-                win.print();
-            }}
-        </script>
-        """, unsafe_allow_html=True)
+        receipt = f"""
+        Bill Amount: €{bill_amount:.2f}
+        Tax: {tax:.2f} EUR
+        Tip: {tip:.2f} EUR
+        Total Bill: {total_bill_converted:.2f} {to_currency}
+        Price per Person: {price_per_person_converted:.2f} {to_currency}
+        Paid Amount: {paid_amount:.2f} {to_currency}
+        Change: {change:.2f} {to_currency}
+        """
+        st.download_button("Download Receipt", receipt, file_name="receipt.txt")
 
+        db.collection('Bill').add(bill_data)
+
+        print("Document successfully written!")
     else:
         shortfall = total_bill_converted - paid_amount
-        st.error(f"{labels['not_enough_money']} You need to add {shortfall:.2f} {to_currency}.")
+        st.error(f"Not enough money provided. You need to add {shortfall:.2f} {to_currency}.")
