@@ -1,6 +1,5 @@
 import streamlit as st
 import requests
-from dotenv import load_dotenv
 from firebase_config import initialize_firebase
 from firebase_admin import firestore
 from datetime import datetime
