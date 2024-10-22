@@ -11,17 +11,6 @@ api_key = '4c4526a8497e62ab526b17db'
 # เรียกใช้ฟังก์ชันเพื่อเชื่อมต่อกับ Firestore
 db = initialize_firebase()
 
-# ฟังก์ชันสำหรับแปลงสกุลเงิน
-def convert_currency(api_key, from_currency, to_currency, amount):
-    url = f"https://api.exchangerate-api.com/v4/latest/{from_currency}"
-    response = requests.get(url)
-    
-    if response.status_code == 200:
-        rates = response.json().get("rates", {})
-        if to_currency in rates:
-            return amount * rates[to_currency]
-    return 0
-
 # ฟังก์ชันสำหรับบันทึกใบเสร็จลง Firebase
 def save_receipt_to_firestore(bill_amount, tax, tip, total_bill_converted, price_per_person_converted, paid_amount, change, currency):
     try:
@@ -40,6 +29,24 @@ def save_receipt_to_firestore(bill_amount, tax, tip, total_bill_converted, price
         st.success("Receipt successfully saved to the cloud.")
     except Exception as e:
         st.error(f"Error saving receipt to cloud: {e}")
+
+
+# ฟังก์ชันสำหรับแปลงสกุลเงิน
+def convert_currency(api_key, from_currency, to_currency, amount):
+    url = f"https://v6.exchangerate-api.com/v6/{api_key}/pair/{from_currency}/{to_currency}/{amount}"
+    
+    try:
+        response = requests.get(url)
+        data = response.json()
+        
+        if response.status_code == 200:
+            return data['conversion_result']
+        else:
+            st.error(f"Error: {data['error-type']}")
+            return None
+    except Exception as e:
+        st.error(f"Error occurred: {e}")
+        return None
 
 # รายการของ denominations ตามสกุลเงิน
 denominations = {
@@ -181,20 +188,6 @@ def display_receipt(bill_amount, tax, tip, total_bill_converted, price_per_perso
         </div>
         """
         st.markdown(receipt, unsafe_allow_html=True)
-
-        # เพิ่มปุ่มพิมพ์ใบเสร็จ
-        st.markdown("""
-        <button onclick="printReceipt()">Print Receipt</button>
-        <script>
-            function printReceipt() {
-                var receiptContent = `""" + receipt.replace("`", "\\`") + """`;
-                var win = window.open('', '', 'width=600,height=400');
-                win.document.write('<html><head><title>Receipt</title></head><body>' + receiptContent + '</body></html>');
-                win.document.close();
-                win.print();
-            }
-        </script>
-        """, unsafe_allow_html=True)
         
     except Exception as e:
         st.error(f"Error displaying receipt: {e}")
@@ -295,21 +288,17 @@ if st.button("Pay"):
         # แสดงใบเสร็จ
         display_receipt(bill_amount, tax, tip, total_bill_converted, price_per_person_converted, paid_amount, change, to_currency)
 
-        # บันทึกข้อมูลใบเสร็จไปยัง Firestore
-        save_receipt_to_firestore(bill_amount, tax, tip, total_bill_converted, price_per_person_converted, paid_amount, change, to_currency)
-
-        # สร้างข้อความใบเสร็จ
-        receipt_text = f"""
-        Bill Amount: €{bill_amount:.2f}
-        Tax: {tax_converted:.2f} {to_currency}
-        Tip: {tip_converted:.2f} {to_currency}
-        Total Bill: {total_bill_converted:.2f} {to_currency}
-        Price per Person: {price_per_person_converted:.2f} {to_currency}
-        Paid Amount: {paid_amount:.2f} {to_currency}
-        Change: {change:.2f} {to_currency}
-        Date: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
-        """
-        
+        bill_data = {
+            'bill_amount': bill_amount,
+            'change': change,
+            'currency': to_currency,
+            'paid_amount': paid_amount,
+            'price_per_person': price_per_person_converted,
+            'tax': tax,
+            'timestamp': datetime.now(),
+            'tip': tip,
+            'total_bill': bill_amount
+        }
         # ปุ่มพิมพ์ใบเสร็จ
         receipt = f"""
         Bill Amount: €{bill_amount:.2f}
