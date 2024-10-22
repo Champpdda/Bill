@@ -1,6 +1,5 @@
 import streamlit as st
 import requests
-import os
 from dotenv import load_dotenv
 from firebase_config import initialize_firebase
 from firebase_admin import firestore
