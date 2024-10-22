@@ -208,7 +208,7 @@ def change_language(language):
             'download_receipt': "ดาวน์โหลดใบเสร็จ",
             'not_enough_money': "เงินที่ให้ไม่เพียงพอ."
         }
-    elif language == 'Lao':  # เพิ่มการสนับสนุนภาษาลาว
+    elif language == 'Laos':  # เพิ่มการสนับสนุนภาษาลาว
         return {
             'title': "ຄະແນນບິນ",
             'bill_amount': "ຈຳນວນບິນ (EUR):",
@@ -236,7 +236,7 @@ def change_language(language):
         }
 
 # เปลี่ยน selectbox ในส่วนของการเลือกภาษา
-language = st.sidebar.selectbox("Select Language:", ["English", "Thai", "Lao"])
+language = st.sidebar.selectbox("Select Language:", ["English", "Thai", "Laos"])
 labels = change_language(language)
 
 st.title(labels['title'])
