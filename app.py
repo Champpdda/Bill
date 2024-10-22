@@ -166,9 +166,8 @@ def display_receipt(bill_amount, tax, tip, total_bill_converted, price_per_perso
     try:
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         receipt = f"""
-        <div style="border: 1px solid #ccc; border-radius: 10px; padding: 20px; width: 400px; margin: auto; font-family: Arial, sans-serif; background-color: #f9f9f9;">
+        <div style="border: 1px solid #ccc; border-radius: 10px; padding: 20px; width: 400px; margin: auto; font-family: Arial, sans-serif;">
             <h2 style="text-align: center; color: #007BFF;">Receipt</h2>
-            <img src="path/to/logo.png" style="display: block; margin: auto; width: 100px;"/>
             <p><strong>Date:</strong> {current_time}</p>
             <p><strong>Bill Amount:</strong> €{bill_amount:.2f}</p>
             <p><strong>Tax:</strong> {tax:.2f} {currency}</p>
@@ -181,6 +180,21 @@ def display_receipt(bill_amount, tax, tip, total_bill_converted, price_per_perso
         </div>
         """
         st.markdown(receipt, unsafe_allow_html=True)
+
+        # เพิ่มปุ่มพิมพ์ใบเสร็จ
+        st.markdown("""
+        <button onclick="printReceipt()">Print Receipt</button>
+        <script>
+            function printReceipt() {
+                var receiptContent = `""" + receipt.replace("`", "\\`") + """`;
+                var win = window.open('', '', 'width=600,height=400');
+                win.document.write('<html><head><title>Receipt</title></head><body>' + receiptContent + '</body></html>');
+                win.document.close();
+                win.print();
+            }
+        </script>
+        """, unsafe_allow_html=True)
+        
     except Exception as e:
         st.error(f"Error displaying receipt: {e}")
 
