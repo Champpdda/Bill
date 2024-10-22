@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import firebase_admin
 from firebase_admin import credentials, firestore
 
@@ -14,7 +13,6 @@ def initialize_firebase():
     return firestore.client()
 
 
-=======
 import firebase_admin
 from firebase_admin import credentials, firestore
 
@@ -30,4 +28,3 @@ def initialize_firebase():
     return firestore.client()
 
 
->>>>>>> d0d26c354aaa6c3545dee78344034eec227061ce
