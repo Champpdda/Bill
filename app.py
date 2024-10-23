@@ -6,7 +6,7 @@ from firebase_admin import credentials, firestore
 from datetime import datetime
 
 # ใส่ API Key ที่ได้รับ
-api_key = '4c4526a8497e62ab526b17db'
+api_key = '4341f81eb1c0278b80ef88bd'
 
 # เรียกใช้ฟังก์ชันเพื่อเชื่อมต่อกับ Firestore
 db = initialize_firebase()
