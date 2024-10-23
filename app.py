@@ -178,8 +178,8 @@ def display_receipt(bill_amount, tax, tip, total_bill_converted, price_per_perso
             <h2 style="text-align: center; color: #007BFF;">Receipt</h2>
             <p><strong>Date:</strong> {current_time}</p>
             <p><strong>Bill Amount:</strong> €{bill_amount:.2f}</p>
-            <p><strong>Tax:</strong> {tax:.2f} {currency}</p>
-            <p><strong>Tip:</strong> {tip:.2f} {currency}</p>
+            <p><strong>Tax:</strong> {tax:.2f} %</p>
+            <p><strong>Tip:</strong> {tip:.2f} %</p>
             <p><strong>Total Bill:</strong> {total_bill_converted:.2f} {currency}</p>
             <p><strong>Price per Person:</strong> {price_per_person_converted:.2f} {currency}</p>
             <p><strong>Paid Amount:</strong> {paid_amount:.2f} {currency}</p>
@@ -282,6 +282,7 @@ for denomination in selected_denominations:
 
 # Pay button logic
 if st.button("Pay"):
+    print("Pay clicked")
     if paid_amount >= total_bill_converted:
         change = paid_amount - total_bill_converted
         
